@@ -1,73 +1,62 @@
-# Welcome to your Lovable project
+# Medicircle Connect
 
-## Project info
+## Project Overview
+Medicircle Connect is an AI-powered Pharmacovigilance platform designed to bridge the gap between patients, doctors, and pharmacists. It features a modern, accessible interface and a robust backend for real-time data processing.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Tech Stack
+-   **Frontend**: React + Vite + TypeScript + Tailwind CSS
+-   **Backend**: Python FastAPI
+-   **Database**: Neon DB (PostgreSQL)
 
-## How can I edit this code?
+## 🚀 How to Run the Project
 
-There are several ways of editing your application.
+### Prerequisites
+1.  **Node.js** installed.
+2.  **Python** installed.
+3.  **Neon DB Connection String** configured in `backend/.env`.
 
-**Use Lovable**
+### Option 1: The Easy Way (Windows)
+We have provided a script to handle the backend startup for you.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+1.  **Start Backend**:
+    Double-click the `start_backend.bat` file in the root folder.
+    *This will install Python dependencies and start the server at `http://localhost:8000`.*
 
-Changes made via Lovable will be committed automatically to this repo.
+2.  **Start Frontend**:
+    Open a terminal in the root folder and run:
+    ```bash
+    npm run dev
+    ```
+    *This will start the UI at `http://localhost:8080` (or similar).*
 
-**Use your preferred IDE**
+### Option 2: Manual Setup
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+**Backend**:
+```bash
+cd backend
+# Create virtual env (optional but recommended)
+python -m venv venv
+.\venv\Scripts\activate
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+# Install dependencies
+pip install -r requirements.txt
 
-Follow these steps:
+# Run Server
+uvicorn main:app --reload
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+**Frontend**:
+```bash
+# In the root folder
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Features
+-   **Patients**: Report side effects via a WhatsApp-style chat interface.
+-   **Doctors**: View prioritized cases with AI severity analysis.
+-   **Pharmacists**: Manage stock and view SOP guidelines.
+-   **Admins**: Enlist new medicines and view analytic heatmaps.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## License
+Private Property of Medicova.

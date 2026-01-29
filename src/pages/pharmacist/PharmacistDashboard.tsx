@@ -1,204 +1,214 @@
 import { useState } from 'react';
-import { mockMedicineQueries } from '@/data/mockData';
-import { MedicineQuery } from '@/types';
-import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Pill,
-  MessageSquare,
-  Clock,
-  CheckCircle2,
-  RefreshCw,
-  HelpCircle,
-  User,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Bot, Package, FileText, AlertCircle, Search, Plus, Send } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 const PharmacistDashboard = () => {
   const { user } = useAuth();
-  const [queries, setQueries] = useState(mockMedicineQueries);
-  const [selectedQuery, setSelectedQuery] = useState<MedicineQuery | null>(null);
-  const [response, setResponse] = useState('');
 
-  const openCount = queries.filter(q => q.status === 'open').length;
+  // Mock Inventory Data
+  const [inventory, setInventory] = useState([
+    { id: 1, name: 'Paracetamol 500mg', stock: 1200, status: 'In Stock', demand: 'High' },
+    { id: 2, name: 'Amoxicillin 250mg', stock: 50, status: 'Low Stock', demand: 'Medium' },
+    { id: 3, name: 'Cetirizine 10mg', stock: 0, status: 'Out of Stock', demand: 'High' },
+    { id: 4, name: 'Metformin 500mg', stock: 400, status: 'In Stock', demand: 'Low' },
+  ]);
 
-  const handleAnswer = (id: string) => {
-    setQueries(queries.map(q => q.id === id ? { ...q, status: 'answered' as const } : q));
-    setSelectedQuery(null);
-    setResponse('');
+  // AI Bot State
+  const [botMessages, setBotMessages] = useState<{ sender: 'user' | 'bot', text: string }[]>([
+    { sender: 'bot', text: 'Hello! I am your AI SOP Assistant. Ask me about dosage guidelines or side effects.' }
+  ]);
+  const [botInput, setBotInput] = useState('');
+
+  const handleBotSend = () => {
+    if (!botInput.trim()) return;
+    const newMessages = [...botMessages, { sender: 'user' as const, text: botInput }];
+    setBotMessages(newMessages);
+    setBotInput('');
+
+    // Mock Response
+    setTimeout(() => {
+      setBotMessages(prev => [...prev, {
+        sender: 'bot',
+        text: `Based on standard guidelines, ${botInput.includes('dosage') ? 'the recommended dosage is...' : 'here is the information you requested...'}`
+      }]);
+    }, 1000);
   };
 
-  const formatTime = (date: Date) => {
-    const diff = Date.now() - date.getTime();
-    const hours = Math.floor(diff / 3600000);
-    if (hours < 1) return 'Just now';
-    if (hours < 24) return `${hours}h ago`;
-    return `${Math.floor(hours / 24)}d ago`;
+  const handleComplaintSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast.success("Complaint Registered Successfully");
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="animate-fade-in">
-        <h1 className="text-2xl font-bold text-foreground">
-          Welcome, {user?.name}! 💊
-        </h1>
-        <p className="mt-1 text-muted-foreground">
-          Answer medicine queries and help patients
-        </p>
+    <div className="space-y-6 container mx-auto max-w-7xl">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Pharmacist Portal</h1>
+          <p className="text-muted-foreground">{user?.name} • {user?.email}</p>
+        </div>
+        <Button onClick={() => toast.info("Syncing inventory...")} variant="outline" className="gap-2">
+          <Package className="h-4 w-4" /> Sync Stock
+        </Button>
       </div>
 
-      {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="stats-card">
-          <div className="flex items-center gap-3">
-            <Pill className="h-8 w-8 text-primary" />
-            <div>
-              <p className="text-3xl font-bold">{queries.length}</p>
-              <p className="text-sm text-muted-foreground">Total Queries</p>
-            </div>
-          </div>
-        </div>
-        <div className="stats-card">
-          <div className="flex items-center gap-3">
-            <HelpCircle className="h-8 w-8 text-warning" />
-            <div>
-              <p className="text-3xl font-bold">{openCount}</p>
-              <p className="text-sm text-muted-foreground">Open Queries</p>
-            </div>
-          </div>
-        </div>
-        <div className="stats-card">
-          <div className="flex items-center gap-3">
-            <CheckCircle2 className="h-8 w-8 text-secondary" />
-            <div>
-              <p className="text-3xl font-bold">{queries.length - openCount}</p>
-              <p className="text-sm text-muted-foreground">Answered</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Tabs defaultValue="stock" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-4 lg:w-[400px]">
+          <TabsTrigger value="stock">Stock</TabsTrigger>
+          <TabsTrigger value="complaints">Forms</TabsTrigger>
+          <TabsTrigger value="sop">SOPs</TabsTrigger>
+          <TabsTrigger value="ai">AI Help</TabsTrigger>
+        </TabsList>
 
-      {/* Queries Grid */}
-      <div className="medical-card">
-        <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
-          <MessageSquare className="h-5 w-5 text-primary" />
-          Medicine Queries
-        </h2>
+        {/* --- STOCK & DEMAND --- */}
+        <TabsContent value="stock" className="space-y-4">
+          <div className="flex gap-4 mb-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search medicines..." className="pl-9" />
+            </div>
+          </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          {queries.map((query, index) => (
-            <div
-              key={query.id}
-              onClick={() => query.status === 'open' && setSelectedQuery(query)}
-              className={cn(
-                'animate-fade-in rounded-lg border border-border p-4 transition-all',
-                query.status === 'open'
-                  ? 'cursor-pointer hover:border-primary/50 hover:shadow-md'
-                  : 'opacity-60'
-              )}
-              style={{ animationDelay: `${index * 50}ms` }}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <Pill className="h-5 w-5 text-primary" />
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Medicine Name</TableHead>
+                    <TableHead>Stock Level</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Demand</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {inventory.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell>{item.stock} units</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${item.stock === 0 ? 'bg-red-100 text-red-700' : item.stock < 100 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                          {item.status}
+                        </span>
+                      </TableCell>
+                      <TableCell>{item.demand}</TableCell>
+                      <TableCell className="text-right">
+                        <Button size="sm" variant="ghost">Restock</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* --- COMPLAINT FORM --- */}
+        <TabsContent value="complaints">
+          <Card className="max-w-2xl">
+            <CardHeader>
+              <CardTitle>Report Adverse Event / Complaint</CardTitle>
+              <CardDescription>Log issues reported by walk-in patients</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleComplaintSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Patient Name</Label>
+                    <Input placeholder="Full Name" required />
                   </div>
-                  <div>
-                    <h3 className="font-semibold">{query.medicineName}</h3>
-                    <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      {formatTime(query.timestamp)}
-                    </p>
+                  <div className="space-y-2">
+                    <Label>Phone Number</Label>
+                    <Input placeholder="10-digit number" required />
                   </div>
                 </div>
-                <Badge
-                  variant="secondary"
-                  className={query.status === 'open' ? 'bg-warning/10 text-warning' : 'bg-secondary/10 text-secondary'}
-                >
-                  {query.status === 'open' ? 'Open' : 'Answered'}
-                </Badge>
-              </div>
-
-              <p className="mt-3 text-sm text-foreground">{query.question}</p>
-
-              {query.patientInfo && (
-                <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-                  <User className="h-3 w-3" />
-                  {query.patientInfo}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Answer Dialog */}
-      <Dialog open={!!selectedQuery} onOpenChange={() => setSelectedQuery(null)}>
-        <DialogContent>
-          {selectedQuery && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Pill className="h-5 w-5 text-primary" />
-                  {selectedQuery.medicineName}
-                </DialogTitle>
-                <DialogDescription>
-                  Provide guidance for this medicine query
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-4 py-4">
-                <div className="rounded-lg bg-muted p-3">
-                  <p className="text-sm font-medium">{selectedQuery.question}</p>
-                  {selectedQuery.patientInfo && (
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Patient: {selectedQuery.patientInfo}
-                    </p>
-                  )}
-                </div>
-
                 <div className="space-y-2">
-                  <p className="text-sm font-medium">Your Response</p>
-                  <Textarea
-                    value={response}
-                    onChange={(e) => setResponse(e.target.value)}
-                    placeholder="Type your professional guidance..."
-                    rows={4}
-                  />
+                  <Label>Suspected Medicine</Label>
+                  <Input placeholder="Brand or Generic Name" required />
                 </div>
-              </div>
+                <div className="space-y-2">
+                  <Label>Issue Description</Label>
+                  <Input placeholder="Describe side effects or defects..." required />
+                </div>
+                <Button type="submit" className="w-full">Submit Report</Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-              <div className="flex gap-3">
-                <Button
-                  className="btn-medical-primary flex-1 gap-2"
-                  onClick={() => handleAnswer(selectedQuery.id)}
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  Answer Query
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1 gap-2"
-                  onClick={() => handleAnswer(selectedQuery.id)}
-                >
-                  <RefreshCw className="h-4 w-4" />
-                  Suggest Alternative
-                </Button>
+        {/* --- SOP & DOSAGE --- */}
+        <TabsContent value="sop">
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-blue-600" /> Standard Operating Procedures
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {['Storage of Vaccines', 'Dispensing Schedule H Drugs', 'Handling Expired Medicine', 'Narcotics Record Keeping'].map((doc) => (
+                  <div key={doc} className="p-3 border rounded-lg hover:bg-muted cursor-pointer flex justify-between items-center transition-colors">
+                    <span>{doc}</span>
+                    <Button size="sm" variant="outline">View</Button>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-orange-600" /> Critical Drug Alerts
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-red-50 text-red-900 p-4 rounded-lg border border-red-200 text-sm">
+                  <strong>Recall Notice:</strong> Batches of "Xylocain 2%" (Batch #445) recalled due to crystallization issues. Check stock immediately.
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* --- AI ASSISTANT --- */}
+        <TabsContent value="ai">
+          <Card className="h-[500px] flex flex-col">
+            <CardHeader className="bg-muted/50 border-b py-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Bot className="h-4 w-4" /> AI Guidelines Helper
+              </CardTitle>
+            </CardHeader>
+            <ScrollArea className="flex-1 p-4">
+              <div className="space-y-4">
+                {botMessages.map((m, i) => (
+                  <div key={i} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[80%] p-3 rounded-lg text-sm ${m.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                      {m.text}
+                    </div>
+                  </div>
+                ))}
               </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+            </ScrollArea>
+            <div className="p-4 border-t flex gap-2">
+              <Input
+                value={botInput}
+                onChange={e => setBotInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleBotSend()}
+                placeholder="Ask about interactions, dosage..."
+              />
+              <Button onClick={handleBotSend} size="icon"><Send className="h-4 w-4" /></Button>
+            </div>
+          </Card>
+        </TabsContent>
+
+      </Tabs>
     </div>
   );
 };

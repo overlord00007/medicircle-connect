@@ -48,6 +48,7 @@ export interface PatientCase {
   riskLevel?: 'low' | 'medium' | 'high';
   region?: string;
   isPregnant?: boolean;
+  source?: 'web' | 'whatsapp';
 }
 
 export interface MedicineQuery {
